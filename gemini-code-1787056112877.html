@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Знайди сліпу зону у своєму блозі 🍋</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #F2E394;
+    --yellow-vivid: #EED971;
+    --green: #B9D3B4;
+    --green-dark: #5c8f54;
+    --red-alert: #d9534f;
+    --red-bg: #fdf0f0;
+    --text: #2C3E35;
+    --text-light: #5a7060;
+    --white: #FFFFFF;
+    --radius: 24px;
+    --shadow: 0 10px 30px rgba(44,62,53,0.12);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--yellow);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ---- DECORATION BG ---- */
+  .deco {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .deco-1 {
+    width: 380px; height: 380px;
+    background: radial-gradient(circle at 40% 40%, #fff7a0 0%, #f5d94e55 60%, transparent 100%);
+    top: -120px; right: -90px;
+  }
+  .deco-2 {
+    width: 260px; height: 260px;
+    background: radial-gradient(circle at 60% 60%, #b9d3b466 0%, transparent 80%);
+    bottom: -80px; left: -70px;
+  }
+
+  /* ---- CARD ---- */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    max-width: 600px;
+    width: 100%;
+    padding: 40px 32px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.4s ease-out;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ---- TITLES & TEXT ---- */
+  .title-main {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.5rem, 4vw, 2.1rem);
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.3;
+    margin-bottom: 16px;
+  }
+  .text-body {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-light);
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .text-body strong { color: var(--text); font-weight: 800; }
+
+  /* ---- BTN ---- */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 18px 24px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: center;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--yellow-vivid);
+    color: var(--text);
+    box-shadow: 0 6px 20px rgba(238,217,113,0.7);
+  }
+  .btn-primary:hover {
+    background: var(--green);
+    color: var(--text);
+    box-shadow: 0 10px 28px rgba(185,211,180,0.8);
+    transform: translateY(-2px);
+  }
+
+  /* ---- PROGRESS BAR QUIZ ---- */
+  .progress-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--text-light);
+    margin-bottom: 8px;
+  }
+  .progress-bar-wrap {
+    width: 100%;
+    height: 10px;
+    background: #f4eed0;
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 26px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green-dark), #81c784);
+    border-radius: 99px;
+    transition: width 0.3s ease;
+  }
+
+  /* ---- QUESTION & OPTIONS ---- */
+  .question-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--text);
+    margin-bottom: 22px;
+  }
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .option-btn {
+    background: var(--white);
+    border: 2px solid #e2dcb6;
+    border-radius: 18px;
+    padding: 16px 20px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+    box-shadow: 0 3px 12px rgba(44,62,53,0.04);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    line-height: 1.45;
+  }
+  .option-btn:hover {
+    background: #f8f6e8;
+    border-color: var(--green-dark);
+    transform: translateX(4px);
+  }
+  .opt-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+    background: var(--yellow);
+    font-weight: 900;
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+
+  /* ---- LOADING SCREEN ---- */
+  .loader-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+  }
+  .spinner {
+    width: 56px;
+    height: 56px;
+    border: 6px solid #f4eed0;
+    border-top: 6px solid var(--green-dark);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 24px;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .loader-status {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  /* ---- RESULT STYLES & VISUAL SCALES ---- */
+  .result-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: #fdf8d5;
+    border: 1px solid var(--yellow-vivid);
+    color: var(--green-dark);
+    font-weight: 900;
+    font-size: 0.85rem;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .breakdown-box {
+    background: #fcfbefe6;
+    border: 1px solid #ebd879;
+    border-radius: 20px;
+    padding: 20px 22px;
+    margin: 22px 0;
+  }
+
+  .breakdown-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--text-light);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  .scale-item {
+    margin-bottom: 16px;
+  }
+  .scale-item:last-child { margin-bottom: 0; }
+
+  .scale-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.93rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .scale-bar-wrap {
+    width: 100%;
+    height: 12px;
+    background: #e8e3c5;
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .scale-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s ease;
+    background: var(--green-dark);
+  }
+
+  /* Highlight for Blind Spot Zone */
+  .scale-item.blind-spot .scale-bar-fill {
+    background: var(--red-alert);
+  }
+  .scale-item.blind-spot .scale-header {
+    color: var(--red-alert);
+  }
+  .blind-tag {
+    display: none;
+    font-size: 0.75rem;
+    background: var(--red-alert);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    font-weight: 900;
+  }
+  .scale-item.blind-spot .blind-tag {
+    display: inline-block;
+  }
+
+  /* Lesson pitch banner */
+  .lesson-pitch-box {
+    background: #f4f8f3;
+    border: 1.5px dashed var(--green-dark);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+  .lesson-pitch-box p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  .restart-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 14px;
+    width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<div class="deco deco-1"></div>
+<div class="deco deco-2"></div>
+
+<div class="card">
+
+  <!-- ===== START SCREEN ===== -->
+  <div class="screen active" id="screen-start">
+    <h1 class="title-main">Знайди сліпу зону у своєму блозі 🍋</h1>
+    <p class="text-body">
+      Робиш багато дій, але клієнти купують хаотично або взагалі зникають після запиту ціни?
+    </p>
+    <p class="text-body">
+      Дай відповіді на <strong>10 питань</strong>, щоб дізнатися, що саме стопорить твої продажі — <strong>Мислення, Маркетинг чи Дії</strong>, і як перетворити блог на стабільне джерело заявок!
+    </p>
+    <button class="btn btn-primary" onclick="startQuiz()">Розпочати тест 🍋</button>
+  </div>
+
+  <!-- ===== QUIZ SCREEN ===== -->
+  <div class="screen" id="screen-quiz">
+    <div class="progress-head">
+      <span id="progress-text">Питання 1 з 10</span>
+      <span id="progress-pct">10%</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-fill" style="width:10%"></div>
+    </div>
+
+    <p class="question-text" id="question-text"></p>
+    <div class="options" id="options-wrap"></div>
+  </div>
+
+  <!-- ===== LOADING SCREEN ===== -->
+  <div class="screen" id="screen-loading">
+    <div class="loader-box">
+      <div class="spinner"></div>
+      <div class="loader-status" id="loader-status">Підраховуємо результати...</div>
+      <p class="text-body" style="margin-bottom:0; font-size: 0.9rem;">Виявляємо сліпу зону, яка стопорить твої продажі 🍋</p>
+    </div>
+  </div>
+
+  <!-- ===== RESULT SCREEN ===== -->
+  <div class="screen" id="screen-result">
+    <div style="text-align: center;">
+      <span class="result-badge">Результат аналізу 🍋</span>
+      <h2 class="title-main" id="res-title" style="margin-top:4px;"></h2>
+    </div>
+
+    <!-- VISUAL SCALES BREAKDOWN -->
+    <div class="breakdown-box">
+      <div class="breakdown-title">Аналіз зон ризику (з 10):</div>
+      
+      <!-- Scale 1: M1 -->
+      <div class="scale-item" id="item-m1">
+        <div class="scale-header">
+          <span>🧠 Блоки в Мисленні <span class="blind-tag">Сліпа зона</span></span>
+          <span id="score-m1-text">0/10</span>
+        </div>
+        <div class="scale-bar-wrap">
+          <div class="scale-bar-fill" id="bar-m1" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Scale 2: M2 -->
+      <div class="scale-item" id="item-m2">
+        <div class="scale-header">
+          <span>📈 Помилки в Маркетингу <span class="blind-tag">Сліпа зона</span></span>
+          <span id="score-m2-text">0/10</span>
+        </div>
+        <div class="scale-bar-wrap">
+          <div class="scale-bar-fill" id="bar-m2" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Scale 3: D -->
+      <div class="scale-item" id="item-d">
+        <div class="scale-header">
+          <span>⚡ Хаос у Діях <span class="blind-tag">Сліпа зона</span></span>
+          <span id="score-d-text">0/10</span>
+        </div>
+        <div class="scale-bar-wrap">
+          <div class="scale-bar-fill" id="bar-d" style="width: 0%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-body" id="res-body" style="text-align:left; font-size: 0.98rem; margin-bottom: 20px;"></p>
+
+    <!-- LESSON OFFER TEXT -->
+    <div class="lesson-pitch-box">
+      <p>🎯 <strong>Що робити далі?</strong> Я підготував(ла) для тебе короткий практичний урок, який допоможе зробити роботу над блогом максимально збалансованою та точно отримати стабільний результат без вигорання!</p>
+    </div>
+
+    <button class="btn btn-primary" onclick="redirectToDirect()">Забрати практичний урок в Direct 🍋</button>
+    <button class="restart-btn" onclick="startQuiz()">Пройти тест заново</button>
+  </div>
+
+</div>
+
+<script>
+const DIRECT_URL = "https://ig.me/m/lana.lemo";
+
+const questions = [
+  {
+    q: "1. Що ти відчуваєш, коли треба вийти в сторіз або заявити про нову послугу?",
+    opts: [
+      { text: "Страх оцінки, тривогу або думку «кому це взагалі потрібно»", type: "M1" },
+      { text: "Брак розуміння, як донести цінність, щоб купували, а не просто дивилися", type: "M2" },
+      { text: "Ідеї є, але постійно відкладаю і виходжу раз на 2 тижні", type: "D" }
+    ]
+  },
+  {
+    q: "2. Як зараз виглядають твої продажі у блозі?",
+    opts: [
+      { text: "Соромно називати чек, боюся відмов, часто роблю знижки", type: "M1" },
+      { text: "Люди запитують ціну і зникають, бо немає чіткої системи/оферу", type: "M2" },
+      { text: "Роблю контент ривками: то 3 дні активності, то зникаю на тиждень", type: "D" }
+    ]
+  },
+  {
+    q: "3. Що ти робиш, коли бачиш, що заявки з блогу впали?",
+    opts: [
+      { text: "Купую черговий курс, бо здається, що я «ще недостатньо експерт»", type: "M1" },
+      { text: "Змінюю шапку профілю або визуал, але це не дає нових клієнтів", type: "M2" },
+      { text: "Виписую великий список завдань, але день минає, а головне не зроблено", type: "D" }
+    ]
+  },
+  {
+    q: "4. Твоє головне відчуття стосовно продажів у соцмережах:",
+    opts: [
+      { text: "Великі гроші приходять важко, а продавати — це бути нав'язливим", type: "M1" },
+      { text: "На ринку занадто висока конкуренція, важко виділитися", type: "M2" },
+      { text: "Мені просто бракує самодисципліни та регулярності", type: "D" }
+    ]
+  },
+  {
+    q: "5. Як ти реагуєш, коли хтось відмовляється від твоєї послуги?",
+    opts: [
+      { text: "Приймаю на свій рахунок, вмикається синдром самозванця", type: "M1" },
+      { text: "Не розумію, що саме не спрацювало в пропозиції або діалозі", type: "M2" },
+      { text: "Забиваю, втрачаю мотивацію і на кілька днів випадаю з блогу", type: "D" }
+    ]
+  },
+  {
+    q: "6. Твій позиціонування та продукт зараз:",
+    opts: [
+      { text: "Важко чітко сформулювати цінність, постійно знецінюю свій досвід", type: "M1" },
+      { text: "Немає продуманого шляху, за яким передплатник стає покупцем", type: "M2" },
+      { text: "Продукт є, але я просто не роблю щоденних кроків для його просування", type: "D" }
+    ]
+  },
+  {
+    q: "7. Що відбудеться, якщо ти вирішиш підняти ціни у 2 рази?",
+    opts: [
+      { text: "З'явиться сильний страх відповідальності та думка «я не витягну»", type: "M1" },
+      { text: "Не знаю, де шукати нову аудиторію, яка готова купувати дорожче", type: "M2" },
+      { text: "Планую це вже кілька місяців, але так і не зробила конкретного кроку", type: "D" }
+    ]
+  },
+  {
+    q: "8. Головна причина твоєї втоми від блогу:",
+    opts: [
+      { text: "Постійна внутрішня напруга та сумніви у собі", type: "M1" },
+      { text: "Купа зусиль на контент, який не дає вихлопу у вигляді заявок", type: "M2" },
+      { text: "Хаос у завданнях, побут та постійне перемикання уваги", type: "D" }
+    ]
+  },
+  {
+    q: "9. Твій звичайний підхід до запуску нових ідей:",
+    opts: [
+      { text: "Довго шліфую все до ідеалу через перфекціонізм", type: "M1" },
+      { text: "Шукаю нові «тренді фішки», замість побудови простої воронки", type: "M2" },
+      { text: "Запалююся ідеєю, а через 2 дні кидаю її не довівши до кінця", type: "D" }
+    ]
+  },
+  {
+    q: "10. Що тобі потрібно від блогу найбільше прямо зараз?",
+    opts: [
+      { text: "Впевненість у собі та свобода від страху чужої оцінки", type: "M1" },
+      { text: "Зрозуміла система, яка генерує заявки без цілодобового сидіння в сторіз", type: "M2" },
+      { text: "Дисципліна, фокус та покроковий план без вигорання", type: "D" }
+    ]
+  }
+];
+
+const resultsData = {
+  M1: {
+    title: "Твоя сліпа зона — Мислення 🧠",
+    body: "Ти маєш достатньо знань та експертності, але твої продажі блокують **внутрішні гальма**: страх оцінки, синдром самозванця та почуття провини за ціну.<br><br>Поки є опір на рівні мислення, навіть найкращий маркетинг не спрацює — ти будеш підсвідомо саботувати власні продажі."
+  },
+  M2: {
+    title: "Твоя сліпа зона — Маркетинг 📈",
+    body: "Ти готова виходити в блог і працювати, але робиш це **без чіткої системи**. Твій контент не показує цінність, офер розмитий, а люди просто дивляться сторіз і йдуть геть.<br><br>Тобі потрібна проста воронка, яка пояснює цінність твоєї послуги без складних схем."
+  },
+  D: {
+    title: "Твоя сліпа зона — Дії ⚡",
+    body: "Твій головний ворог — **відсутність регулярних, точкових дій**. У тебе повно ідей, але ти запалюєшся на кілька днів, після чого падаєш у саботаж чи побутову рутину.<br><br>Без чіткого фокусу та щоденного простого алгоритму блог так і залишатиметься «хобі»."
+  }
+};
+
+let scores = { M1: 0, M2: 0, D: 0 };
+let current = 0;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz() {
+  scores = { M1: 0, M2: 0, D: 0 };
+  current = 0;
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  const pct = Math.round(((current + 1) / questions.length) * 100);
+  
+  document.getElementById('progress-text').textContent = `Питання ${current + 1} з ${questions.length}`;
+  document.getElementById('progress-pct').textContent = `${pct}%`;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+  document.getElementById('question-text').textContent = q.q;
+
+  const wrap = document.getElementById('options-wrap');
+  wrap.innerHTML = '';
+  
+  const letters = ['A', 'B', 'C'];
+  q.opts.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-badge">${letters[idx]}</span><span>${opt.text}</span>`;
+    btn.onclick = () => selectOption(opt.type);
+    wrap.appendChild(btn);
+  });
+}
+
+function selectOption(type) {
+  scores[type]++;
+  current++;
+  if (current < questions.length) {
+    renderQuestion();
+  } else {
+    runLoader();
+  }
+}
+
+function runLoader() {
+  showScreen('screen-loading');
+  const statusEl = document.getElementById('loader-status');
+  
+  setTimeout(() => {
+    statusEl.textContent = "Виявляємо сліпу зону...";
+  }, 1000);
+
+  setTimeout(() => {
+    showResult();
+  }, 2200);
+}
+
+function showResult() {
+  let winner = 'M1';
+  let maxScore = scores.M1;
+
+  if (scores.M2 > maxScore) {
+    winner = 'M2';
+    maxScore = scores.M2;
+  }
+  if (scores.D > maxScore) {
+    winner = 'D';
+    maxScore = scores.D;
+  }
+
+  const res = resultsData[winner];
+  document.getElementById('res-title').textContent = res.title;
+  document.getElementById('res-body').innerHTML = res.body;
+
+  // Update percentages & widths
+  const m1Pct = (scores.M1 / 10) * 100;
+  const m2Pct = (scores.M2 / 10) * 100;
+  const dPct = (scores.D / 10) * 100;
+
+  document.getElementById('score-m1-text').textContent = `${scores.M1}/10`;
+  document.getElementById('score-m2-text').textContent = `${scores.M2}/10`;
+  document.getElementById('score-d-text').textContent = `${scores.D}/10`;
+
+  document.getElementById('bar-m1').style.width = `${Math.max(m1Pct, 8)}%`;
+  document.getElementById('bar-m2').style.width = `${Math.max(m2Pct, 8)}%`;
+  document.getElementById('bar-d').style.width = `${Math.max(dPct, 8)}%`;
+
+  // Highlight blind spot zone
+  document.getElementById('item-m1').classList.toggle('blind-spot', winner === 'M1');
+  document.getElementById('item-m2').classList.toggle('blind-spot', winner === 'M2');
+  document.getElementById('item-d').classList.toggle('blind-spot', winner === 'D');
+
+  showScreen('screen-result');
+}
+
+function redirectToDirect() {
+  window.location.href = DIRECT_URL;
+}
+</script>
+</body>
+</html>
